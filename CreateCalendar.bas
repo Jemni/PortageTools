@@ -10,8 +10,9 @@ Sub CreateCalendar()
     Dim dayNames(0 To 6) As String
     Dim monthNames(1 To 12) As String
     Dim holidays As Collection
+    Dim workingDaysByMonth(1 To 12) As Integer
     
-    ' Noms des jours en anglais, commençant par lundi
+    ' Day names in English, starting with Monday
     dayNames(0) = "Monday"
     dayNames(1) = "Tuesday"
     dayNames(2) = "Wednesday"
@@ -20,7 +21,7 @@ Sub CreateCalendar()
     dayNames(5) = "Saturday"
     dayNames(6) = "Sunday"
     
-    ' Noms des mois en anglais
+    ' Month names in English
     monthNames(1) = "January"
     monthNames(2) = "February"
     monthNames(3) = "March"
@@ -34,8 +35,8 @@ Sub CreateCalendar()
     monthNames(11) = "November"
     monthNames(12) = "December"
     
-    ' Lire l'année à partir de la cellule fusionnée C2
-    yearInput = Range("C3").Value
+    ' Read year from merged cell C2
+    yearInput = Range("C2").Value
     
     If yearInput = "" Then
         MsgBox "Please enter a year in cell C2.", vbCritical
@@ -52,26 +53,26 @@ Sub CreateCalendar()
         Exit Sub
     End If
     
-    ' Récupérer les jours fériés français
+    ' Get French holidays
     Set holidays = GetFrenchHolidays(calYear)
     
-    ' Définir le worksheet actif
+    ' Define active worksheet
     Set ws = ActiveSheet
     
-    ' Activer les événements de changement
+    ' Enable events
     ws.Name = "CalendarSheet"
     Application.EnableEvents = True
     
     ws.Range("A:G").ColumnWidth = 10
     
-    ' Le calendrier commence à partir de B9
+    ' The calendar starts from B19
     Dim startRow As Integer
-    startRow = 9
+    startRow = 19
     Dim startCol As Integer
     startCol = 2  ' Colonne B
     
     For month = 1 To 12
-        ' Month title - fusionner B à H
+        ' Month title - merge B to H
         ws.Range(ws.Cells(startRow, startCol), ws.Cells(startRow, startCol + 6)).Merge
         ws.Cells(startRow, startCol).Value = monthNames(month) & " " & calYear
         ws.Cells(startRow, startCol).Font.Bold = True
@@ -92,7 +93,7 @@ Sub CreateCalendar()
             ws.Cells(startRow, startCol + i).Value = dayNames(i)
             ws.Cells(startRow, startCol + i).Font.Bold = True
             ws.Cells(startRow, startCol + i).HorizontalAlignment = xlCenter
-            ' Couleur bleu #5B9BD5 pour l'en-tête des jours
+            ' Blue color for day headers
             ws.Cells(startRow, startCol + i).Interior.Color = RGB(91, 155, 213)
             ws.Cells(startRow, startCol + i).Font.Color = RGB(255, 255, 255)  ' Texte blanc
             
@@ -104,7 +105,7 @@ Sub CreateCalendar()
         Next i
         startRow = startRow + 1
         
-        ' Mémoriser le début des dates pour ce mois
+        ' Remember start of dates for this month
         Dim dateStartRow As Integer
         dateStartRow = startRow
         
@@ -113,7 +114,7 @@ Sub CreateCalendar()
         lastDay = DateSerial(calYear, month + 1, 0)
         
         ' Get day of week for first day (1=Sunday, 7=Saturday)
-        ' Convertir pour commencer au lundi
+        ' Convert to start on Monday
         Dim weekStartCol As Integer
         weekStartCol = Weekday(firstDay) - 2
         If weekStartCol = -1 Then
@@ -133,7 +134,7 @@ Sub CreateCalendar()
             ws.Cells(row, startCol + col).VerticalAlignment = xlTop
             ws.Cells(row, startCol + col).RowHeight = 15
             
-            ' Vérifier si c'est un jour férié
+            ' Check if it's a holiday
             Dim isHoliday As Boolean
             Dim j As Integer
             Dim holidayName As String
@@ -145,18 +146,28 @@ Sub CreateCalendar()
                 End If
             Next j
             
-            ' Colorier différemment les jours fériés et weekends
-            If isHoliday Then
-                ws.Cells(row, startCol + col).Interior.Color = RGB(255, 200, 0)  ' Orange pour jours fériés
-                ws.Cells(row, startCol + col).Font.Bold = True
-                
-                ' Ajouter une note avec le nom du jour férié
-                holidayName = GetHolidayName(cellDate, calYear)
-                On Error Resume Next
-                ws.Cells(row, startCol + col).AddComment holidayName
-                On Error GoTo 0
-            ElseIf col = 5 Or col = 6 Then
-                ws.Cells(row, startCol + col).Interior.Color = RGB(220, 220, 220)
+            ' Color differently holidays and weekends
+            ' Check if cell is not already green
+            Dim isGreen As Boolean
+            isGreen = False
+            If ws.Cells(row, startCol + col).Interior.Color = RGB(0, 176, 0) Or ws.Cells(row, startCol + col).Interior.Color = RGB(0, 176, 80) Or _
+               ws.Cells(row, startCol + col).Interior.Color = RGB(146, 208, 80) Or ws.Cells(row, startCol + col).Interior.Color = RGB(0, 255, 0) Then
+                isGreen = True
+            End If
+            
+            If Not isGreen Then
+                If isHoliday Then
+                    ws.Cells(row, startCol + col).Interior.Color = RGB(255, 200, 0)  ' Orange pour jours fériés
+                    ws.Cells(row, startCol + col).Font.Bold = True
+                    
+                    ' Add a note with the holiday name
+                    holidayName = GetHolidayName(cellDate, calYear)
+                    On Error Resume Next
+                    ws.Cells(row, startCol + col).AddComment holidayName
+                    On Error GoTo 0
+                ElseIf col = 5 Or col = 6 Then
+                    ws.Cells(row, startCol + col).Interior.Color = RGB(220, 220, 220)
+                End If
             End If
             
             ' Bordure autour de chaque cellule de date
@@ -172,7 +183,7 @@ Sub CreateCalendar()
             End If
         Next dayNum
         
-        ' Ajouter le nombre de jours travaillés et de jours en congé à droite du mois
+        ' Add working and vacation days count on the right of the month
         Dim workingDaysCount As Integer
         Dim vacationDaysCount As Integer
         Dim summaryCol As Integer
@@ -181,49 +192,154 @@ Sub CreateCalendar()
         summaryCol = startCol + 8  ' Colonne I
         summaryRow = startRow
         
-        ' Compter les jours en congé (cellules rouges)
+        ' Count vacation days (red cells)
         Set dateRangeForMonth = ws.Range(ws.Cells(dateStartRow, startCol), ws.Cells(row, startCol + 6))
         vacationDaysCount = CountVacationDays(dateRangeForMonth)
         
-        ' Calculer les jours travaillés en soustrayant les jours de congé
-        workingDaysCount = CountWorkingDays(month, calYear, holidays) - vacationDaysCount
-        ws.Cells(summaryRow, summaryCol).Value = "Jours travaillés: " & workingDaysCount
+        ' Calculate working days by subtracting vacation days and adding green days
+        Dim greenDaysCount As Integer
+        greenDaysCount = CountGreenDays(dateRangeForMonth)
+        workingDaysCount = CountWorkingDays(month, calYear, holidays) - vacationDaysCount + greenDaysCount
+        workingDaysByMonth(month) = workingDaysCount
+        ws.Cells(summaryRow, summaryCol).Value = "Working days:"
         ws.Cells(summaryRow, summaryCol).Font.Bold = True
+        ws.Cells(summaryRow, summaryCol + 1).Value = workingDaysCount
+        ws.Cells(summaryRow, summaryCol + 1).Font.Bold = True
         summaryRow = summaryRow + 1
         
-        ws.Cells(summaryRow, summaryCol).Value = "Jours en congé: " & vacationDaysCount
+        ws.Cells(summaryRow, summaryCol).Value = "Days off:"
         ws.Cells(summaryRow, summaryCol).Font.Bold = True
+        ws.Cells(summaryRow, summaryCol + 1).Value = vacationDaysCount
+        ws.Cells(summaryRow, summaryCol + 1).Font.Bold = True
+        summaryRow = summaryRow + 1
+        
+        ' Count holidays in the month
+        Dim holidaysCount As Integer
+        holidaysCount = CountHolidaysInMonth(holidays, month, calYear)
+        ws.Cells(summaryRow, summaryCol).Value = "Holidays:"
+        ws.Cells(summaryRow, summaryCol).Font.Bold = True
+        ws.Cells(summaryRow, summaryCol + 1).Value = holidaysCount
+        ws.Cells(summaryRow, summaryCol + 1).Font.Bold = True
+        
+        ' Add borders to summary cells
+        Dim summaryBorderRow As Integer
+        For summaryBorderRow = startRow To summaryRow
+            With ws.Cells(summaryBorderRow, summaryCol).Borders
+                .LineStyle = xlContinuous
+                .Weight = xlThin
+            End With
+            With ws.Cells(summaryBorderRow, summaryCol + 1).Borders
+                .LineStyle = xlContinuous
+                .Weight = xlThin
+            End With
+        Next summaryBorderRow
+        
+        ' Column width for working and vacation days
+        ws.Columns(summaryCol).ColumnWidth = 15
         
         startRow = row + 3
     Next month
     
-    MsgBox "Le calendrier pour " & calYear & " a été créé!", vbInformation
+    ' Create summary table starting from M3
+    Dim tableCol As Integer
+    Dim tableRow As Integer
+    Dim multiplierValue As Double
+    tableCol = 13  ' Colonne M
+    tableRow = 3   ' Ligne 3 pour en-têtes
+    
+    ' Table headers
+    ws.Cells(tableRow, tableCol).Value = "Month"
+    ws.Cells(tableRow, tableCol).Font.Bold = True
+    ws.Cells(tableRow, tableCol).Interior.Color = RGB(91, 155, 213)
+    ws.Cells(tableRow, tableCol).Font.Color = RGB(255, 255, 255)
+    ws.Cells(tableRow, tableCol).HorizontalAlignment = xlCenter
+    
+    ws.Cells(tableRow, tableCol + 1).Value = "Working days"
+    ws.Cells(tableRow, tableCol + 1).Font.Bold = True
+    ws.Cells(tableRow, tableCol + 1).Interior.Color = RGB(91, 155, 213)
+    ws.Cells(tableRow, tableCol + 1).Font.Color = RGB(255, 255, 255)
+    ws.Cells(tableRow, tableCol + 1).HorizontalAlignment = xlCenter
+    
+    ws.Cells(tableRow, tableCol + 2).Value = "Revenue"
+    ws.Cells(tableRow, tableCol + 2).Font.Bold = True
+    ws.Cells(tableRow, tableCol + 2).Interior.Color = RGB(91, 155, 213)
+    ws.Cells(tableRow, tableCol + 2).Font.Color = RGB(255, 255, 255)
+    ws.Cells(tableRow, tableCol + 2).HorizontalAlignment = xlCenter
+    
+    ' Get value from C7
+    multiplierValue = ws.Range("C7").Value
+    
+    ' Fill table data
+    tableRow = 4
+    For month = 1 To 12
+        ws.Cells(tableRow, tableCol).Value = monthNames(month)
+        ws.Cells(tableRow, tableCol + 1).Value = workingDaysByMonth(month)
+        ws.Cells(tableRow, tableCol + 2).Formula = "=" & ws.Cells(tableRow, tableCol + 1).Address & "*$C$7"
+        ws.Cells(tableRow, tableCol + 2).NumberFormat = "#,##0.00 ""€"""
+        
+        ' Add borders
+        With ws.Cells(tableRow, tableCol).Borders
+            .LineStyle = xlContinuous
+            .Weight = xlThin
+        End With
+        With ws.Cells(tableRow, tableCol + 1).Borders
+            .LineStyle = xlContinuous
+            .Weight = xlThin
+        End With
+        With ws.Cells(tableRow, tableCol + 2).Borders
+            .LineStyle = xlContinuous
+            .Weight = xlThin
+        End With
+        
+        tableRow = tableRow + 1
+    Next month
+    
+    ' Add borders to headers
+    With ws.Cells(3, tableCol).Borders
+        .LineStyle = xlContinuous
+        .Weight = xlThin
+    End With
+    With ws.Cells(3, tableCol + 1).Borders
+        .LineStyle = xlContinuous
+        .Weight = xlThin
+    End With
+    With ws.Cells(3, tableCol + 2).Borders
+        .LineStyle = xlContinuous
+        .Weight = xlThin
+    End With
+    
+    ' Set column width for table
+    ws.Columns(tableCol).ColumnWidth = 15
+    ws.Columns(tableCol + 1).ColumnWidth = 18
+    ws.Columns(tableCol + 2).ColumnWidth = 20
+    
+    MsgBox "The calendar for " & calYear & " has been created!", vbInformation
 End Sub
 
 Function GetFrenchHolidays(year As Integer) As Collection
     Set GetFrenchHolidays = New Collection
     
-    ' Jours fériés fixes
-    GetFrenchHolidays.Add DateSerial(year, 1, 1)    ' Jour de l'An
-    GetFrenchHolidays.Add DateSerial(year, 5, 1)    ' Fête du Travail
-    GetFrenchHolidays.Add DateSerial(year, 5, 8)    ' Fête de la Victoire 1945
-    GetFrenchHolidays.Add DateSerial(year, 7, 14)   ' Fête nationale
-    GetFrenchHolidays.Add DateSerial(year, 8, 15)   ' Assomption
-    GetFrenchHolidays.Add DateSerial(year, 11, 1)   ' Toussaint
-    GetFrenchHolidays.Add DateSerial(year, 11, 11)  ' Armistice
-    GetFrenchHolidays.Add DateSerial(year, 12, 25)  ' Noël
+    ' Fixed holidays
+    GetFrenchHolidays.Add DateSerial(year, 1, 1)    ' New Year's Day
+    GetFrenchHolidays.Add DateSerial(year, 5, 1)    ' Labour Day
+    GetFrenchHolidays.Add DateSerial(year, 5, 8)    ' Victory Day 1945
+    GetFrenchHolidays.Add DateSerial(year, 7, 14)   ' Bastille Day
+    GetFrenchHolidays.Add DateSerial(year, 8, 15)   ' Assumption of Mary
+    GetFrenchHolidays.Add DateSerial(year, 11, 1)   ' All Saints' Day
+    GetFrenchHolidays.Add DateSerial(year, 11, 11)  ' Armistice Day
+    GetFrenchHolidays.Add DateSerial(year, 12, 25)  ' Christmas
     
-    ' Jours fériés mobiles basés sur Pâques
+    ' Moveable holidays based on Easter
     Dim easterDate As Date
     easterDate = CalculateEaster(year)
     
-    GetFrenchHolidays.Add easterDate + 1            ' Lundi de Pâques
-    GetFrenchHolidays.Add easterDate + 39           ' Ascension
-    GetFrenchHolidays.Add easterDate + 50           ' Lundi de Pentecôte
+    GetFrenchHolidays.Add easterDate + 1            ' Easter Monday
+    GetFrenchHolidays.Add easterDate + 39           ' Ascension Day
+    GetFrenchHolidays.Add easterDate + 50           ' Whit Monday
 End Function
 
 Function CalculateEaster(year As Integer) As Date
-    ' Algorithme de Computus pour calculer la date de Pâques
+    ' Computus algorithm to calculate Easter date
     Dim a As Integer, b As Integer, c As Integer, d As Integer
     Dim e As Integer, f As Integer, g As Integer, h As Integer
     Dim i As Integer, k As Integer, l As Integer, m As Integer
@@ -248,7 +364,7 @@ Function CalculateEaster(year As Integer) As Date
 End Function
 
 Function CountHolidaysInMonth(holidays As Collection, targetMonth As Integer, year As Integer) As Integer
-    ' Compte les jours fériés du mois
+    ' Count holidays in the month
     Dim count As Integer
     Dim j As Integer
     Dim holidayMonth As Integer
@@ -265,30 +381,30 @@ Function CountHolidaysInMonth(holidays As Collection, targetMonth As Integer, ye
 End Function
 
 Function GetHolidayName(cellDate As Date, year As Integer) As String
-    ' Retourne le nom du jour férié pour une date donnée
+    ' Return the name of the holiday for a given date
     Dim easterDate As Date
     
-    ' Jours fériés fixes
-    If cellDate = DateSerial(year, 1, 1) Then GetHolidayName = "Jour de l'An": Exit Function
-    If cellDate = DateSerial(year, 5, 1) Then GetHolidayName = "Fête du Travail": Exit Function
-    If cellDate = DateSerial(year, 5, 8) Then GetHolidayName = "Fête de la Victoire 1945": Exit Function
-    If cellDate = DateSerial(year, 7, 14) Then GetHolidayName = "Fête nationale": Exit Function
-    If cellDate = DateSerial(year, 8, 15) Then GetHolidayName = "Assomption": Exit Function
-    If cellDate = DateSerial(year, 11, 1) Then GetHolidayName = "Toussaint": Exit Function
-    If cellDate = DateSerial(year, 11, 11) Then GetHolidayName = "Armistice": Exit Function
-    If cellDate = DateSerial(year, 12, 25) Then GetHolidayName = "Noël": Exit Function
+    ' Fixed holidays
+    If cellDate = DateSerial(year, 1, 1) Then GetHolidayName = "New Year's Day": Exit Function
+    If cellDate = DateSerial(year, 5, 1) Then GetHolidayName = "Labour Day": Exit Function
+    If cellDate = DateSerial(year, 5, 8) Then GetHolidayName = "Victory Day 1945": Exit Function
+    If cellDate = DateSerial(year, 7, 14) Then GetHolidayName = "Bastille Day": Exit Function
+    If cellDate = DateSerial(year, 8, 15) Then GetHolidayName = "Assumption of Mary": Exit Function
+    If cellDate = DateSerial(year, 11, 1) Then GetHolidayName = "All Saints' Day": Exit Function
+    If cellDate = DateSerial(year, 11, 11) Then GetHolidayName = "Armistice Day": Exit Function
+    If cellDate = DateSerial(year, 12, 25) Then GetHolidayName = "Christmas": Exit Function
     
-    ' Jours fériés mobiles basés sur Pâques
+    ' Moveable holidays based on Easter
     easterDate = CalculateEaster(year)
-    If cellDate = easterDate + 1 Then GetHolidayName = "Lundi de Pâques": Exit Function
-    If cellDate = easterDate + 39 Then GetHolidayName = "Ascension": Exit Function
-    If cellDate = easterDate + 50 Then GetHolidayName = "Lundi de Pentecôte": Exit Function
+    If cellDate = easterDate + 1 Then GetHolidayName = "Easter Monday": Exit Function
+    If cellDate = easterDate + 39 Then GetHolidayName = "Ascension Day": Exit Function
+    If cellDate = easterDate + 50 Then GetHolidayName = "Whit Monday": Exit Function
     
     GetHolidayName = ""
 End Function
 
 Function CountWorkingDays(month As Integer, year As Integer, holidays As Collection) As Integer
-    ' Compte les jours travaillés du mois (lundi à vendredi, sauf jours fériés)
+    ' Count working days in the month (Monday to Friday, excluding holidays)
     Dim count As Integer
     Dim dayNum As Integer
     Dim lastDay As Integer
@@ -305,9 +421,9 @@ Function CountWorkingDays(month As Integer, year As Integer, holidays As Collect
         dayOfWeek = Weekday(cellDate) - 2
         If dayOfWeek = -1 Then dayOfWeek = 6
         
-        ' Vérifier si c'est un jour travaillé (lundi à vendredi, col 0 à 4)
+        ' Check if it's a working day (Monday to Friday, col 0 to 4)
         If dayOfWeek >= 0 And dayOfWeek <= 4 Then
-            ' Vérifier si ce n'est pas un jour férié
+            ' Check if it's not a holiday
             isHoliday = False
             For j = 1 To holidays.Count
                 If holidays(j) = cellDate Then
@@ -326,7 +442,7 @@ Function CountWorkingDays(month As Integer, year As Integer, holidays As Collect
 End Function
 
 Function CountVacationDays(dateRange As Range) As Integer
-    ' Compte les cellules rouges (jours en congé)
+    ' Count red cells (vacation days)
     Dim cell As Range
     Dim count As Integer
     count = 0
@@ -341,5 +457,23 @@ Function CountVacationDays(dateRange As Range) As Integer
     On Error GoTo 0
     
     CountVacationDays = count
+End Function
+
+Function CountGreenDays(dateRange As Range) As Integer
+    ' Count green cells (additional working days)
+    Dim cell As Range
+    Dim count As Integer
+    count = 0
+    
+    On Error Resume Next
+    For Each cell In dateRange
+        If cell.Interior.Color = RGB(0, 176, 0) Or cell.Interior.Color = RGB(0, 176, 80) Or _
+           cell.Interior.Color = RGB(146, 208, 80) Or cell.Interior.Color = RGB(0, 255, 0) Then
+            count = count + 1
+        End If
+    Next cell
+    On Error GoTo 0
+    
+    CountGreenDays = count
 End Function
 
