@@ -250,248 +250,194 @@ Sub CreateCalendar()
     Next month
     
     ' Add total holidays in L2
-    ws.Cells(1, 12).Value = "Total Holidays:"
-    ws.Cells(1, 12).Font.Bold = True
-    ws.Cells(2, 12).Value = totalHolidays
-    ws.Cells(2, 12).Font.Bold = True
-    ws.Cells(2, 12).NumberFormat = "0"
-    
+    ws.Range("L2:M2").Merge
+    ws.Range("L2:M2").Value = totalHolidays
+    ws.Range("L2:M2").Font.Bold = True
+    ws.Range("L2:M2").NumberFormat = "0"
+    ws.Range("L2:M2").HorizontalAlignment = xlCenter
+    ws.Range("L2:M2").VerticalAlignment = xlCenter
+    ws.Range("L2:M2").Borders.LineStyle = xlContinuous
+    ws.Range("L2:M2").Borders.Weight = xlThin
+    ws.Range("L2:M2").Font.Size = 12
+    ws.Range("L2:M2").Font.Color = RGB(250, 125, 0)
+    ws.Range("L2:M2").Interior.Color = RGB(242, 242, 242) 
+
     ' Add total vacation days in L3
-    ws.Cells(3, 12).Value = totalVacationDays
-    ws.Cells(3, 12).Font.Bold = True
-    ws.Cells(3, 12).NumberFormat = "0"
+    ws.Range("L3:M3").Merge
+    ws.Range("L3:M3").Value = totalVacationDays
+    ws.Range("L3:M3").Font.Bold = True
+    ws.Range("L3:M3").NumberFormat = "0"
+    ws.Range("L3:M3").HorizontalAlignment = xlCenter
+    ws.Range("L3:M3").VerticalAlignment = xlCenter
+    ws.Range("L3:M3").Borders.LineStyle = xlContinuous
+    ws.Range("L3:M3").Borders.Weight = xlThin
+    ws.Range("L3:M3").Font.Size = 12
+    ws.Range("L3:M3").Font.Color = RGB(250, 125, 0)
+    ws.Range("L3:M3").Interior.Color = RGB(242, 242, 242)
     
     ' Add total working days in L4
-    ws.Cells(4, 12).Value = totalWorkingDays
-    ws.Cells(4, 12).Font.Bold = True
-    ws.Cells(4, 12).NumberFormat = "0"
+    ws.Range("L4:M4").Merge
+    ws.Range("L4:M4").Value = totalWorkingDays
+    ws.Range("L4:M4").Font.Bold = True
+    ws.Range("L4:M4").NumberFormat = "0"
+    ws.Range("L4:M4").HorizontalAlignment = xlCenter
+    ws.Range("L4:M4").VerticalAlignment = xlCenter
+    ws.Range("L4:M4").Borders.LineStyle = xlContinuous
+    ws.Range("L4:M4").Borders.Weight = xlThin
+    ws.Range("L4:M4").Font.Size = 12
+    ws.Range("L4:M4").Font.Color = RGB(250, 125, 0)
+    ws.Range("L4:M4").Interior.Color = RGB(242, 242, 242)
+    
+    ' Merge J:K labels for rows 2 to 4 with white text on #C65911 fill
+    Dim labelRow As Integer
+    Dim totalLabels As Variant
+    totalLabels = Array("Holiday", "Total Days off", "Total working days")
+    For labelRow = 2 To 4
+        With ws.Range(ws.Cells(labelRow, 10), ws.Cells(labelRow, 11))
+            .Merge
+            .Value = totalLabels(labelRow - 2)
+            .Font.Color = RGB(255, 255, 255)
+            .Interior.Color = RGB(198, 89, 17)
+            .HorizontalAlignment = xlCenter
+            .VerticalAlignment = xlCenter
+            .Font.Size = 12
+            .Borders.LineStyle = xlContinuous
+            .Borders.Weight = xlThin
+        End With
+    Next labelRow
     
     ' Create summary table starting from F7
     Dim tableCol As Integer
     Dim tableRow As Integer
     Dim multiplierValue As Double
+    Dim mergedRange As Range
+    Dim headerTitles As Variant
+    Dim widths As Variant
+    Dim h As Integer
+    Dim k As Integer
     tableCol = 6   ' Column F
     tableRow = 7   ' Starting row 8
     
     ' Merge cells F6:F7, G6:G7, etc. for headers
-    Dim mergedRange As Range
+    headerTitles = Array("Month", "Working days", "Professional launch day", "Calculated Meal vouchers", "Real Meal Voucher", "Revenue", "Monthly Load", "MAY", "Available Balance", "Professional expense", "Treasury", "Net Salary")
+    For h = 0 To 11
+        Set mergedRange = ws.Range(ws.Cells(6, tableCol + h), ws.Cells(7, tableCol + h))
+        mergedRange.Merge
+        mergedRange.Value = headerTitles(h)
+        mergedRange.Font.Bold = True
+        If h = 3 Or h = 11 Then
+            mergedRange.Interior.Color = RGB(198, 239, 206)
+            mergedRange.Font.Color = RGB(0, 97, 0)
+        Else
+            mergedRange.Interior.Color = RGB(91, 155, 213)
+            mergedRange.Font.Color = RGB(255, 255, 255)
+        End If
+        mergedRange.HorizontalAlignment = xlCenter
+    Next h
     
-    Set mergedRange = ws.Range(ws.Cells(6, tableCol), ws.Cells(7, tableCol))
-    mergedRange.Merge
-    mergedRange.Value = "Month"
-    mergedRange.Font.Bold = True
-    mergedRange.Interior.Color = RGB(91, 155, 213)
-    mergedRange.Font.Color = RGB(255, 255, 255)
-    mergedRange.HorizontalAlignment = xlCenter
-    
-    Set mergedRange = ws.Range(ws.Cells(6, tableCol + 1), ws.Cells(7, tableCol + 1))
-    mergedRange.Merge
-    mergedRange.Value = "Working days"
-    mergedRange.Font.Bold = True
-    mergedRange.Interior.Color = RGB(91, 155, 213)
-    mergedRange.Font.Color = RGB(255, 255, 255)
-    mergedRange.HorizontalAlignment = xlCenter
-    
-    Set mergedRange = ws.Range(ws.Cells(6, tableCol + 2), ws.Cells(7, tableCol + 2))
-    mergedRange.Merge
-    mergedRange.Value = "Revenue"
-    mergedRange.Font.Bold = True
-    mergedRange.Interior.Color = RGB(91, 155, 213)
-    mergedRange.Font.Color = RGB(255, 255, 255)
-    mergedRange.HorizontalAlignment = xlCenter
-    
-    Set mergedRange = ws.Range(ws.Cells(6, tableCol + 3), ws.Cells(7, tableCol + 3))
-    mergedRange.Merge
-    mergedRange.Value = "Monthly Load"
-    mergedRange.Font.Bold = True
-    mergedRange.Interior.Color = RGB(91, 155, 213)
-    mergedRange.Font.Color = RGB(255, 255, 255)
-    mergedRange.HorizontalAlignment = xlCenter
-    
-    Set mergedRange = ws.Range(ws.Cells(6, tableCol + 4), ws.Cells(7, tableCol + 4))
-    mergedRange.Merge
-    mergedRange.Value = "MAY"
-    mergedRange.Font.Bold = True
-    mergedRange.Interior.Color = RGB(91, 155, 213)
-    mergedRange.Font.Color = RGB(255, 255, 255)
-    mergedRange.HorizontalAlignment = xlCenter
-    
-    Set mergedRange = ws.Range(ws.Cells(6, tableCol + 5), ws.Cells(7, tableCol + 5))
-    mergedRange.Merge
-    mergedRange.Value = "Available Balance"
-    mergedRange.Font.Bold = True
-    mergedRange.Interior.Color = RGB(91, 155, 213)
-    mergedRange.Font.Color = RGB(255, 255, 255)
-    mergedRange.HorizontalAlignment = xlCenter
-    
-    Set mergedRange = ws.Range(ws.Cells(6, tableCol + 6), ws.Cells(7, tableCol + 6))
-    mergedRange.Merge
-    mergedRange.Value = "Professional expense"
-    mergedRange.Font.Bold = True
-    mergedRange.Interior.Color = RGB(91, 155, 213)
-    mergedRange.Font.Color = RGB(255, 255, 255)
-    mergedRange.HorizontalAlignment = xlCenter
-    
-    Set mergedRange = ws.Range(ws.Cells(6, tableCol + 7), ws.Cells(7, tableCol + 7))
-    mergedRange.Merge
-    mergedRange.Value = "Treasury"
-    mergedRange.Font.Bold = True
-    mergedRange.Interior.Color = RGB(91, 155, 213)
-    mergedRange.Font.Color = RGB(255, 255, 255)
-    mergedRange.HorizontalAlignment = xlCenter
-    
-    Set mergedRange = ws.Range(ws.Cells(6, tableCol + 8), ws.Cells(7, tableCol + 8))
-    mergedRange.Merge
-    mergedRange.Value = "Net Salary"
-    mergedRange.Font.Bold = True
-    mergedRange.Interior.Color = RGB(198, 239, 206)
-    mergedRange.Font.Color = RGB(0, 97, 0)
-    mergedRange.HorizontalAlignment = xlCenter
-    
-    Set mergedRange = ws.Range(ws.Cells(6, tableCol + 9), ws.Cells(7, tableCol + 9))
-    mergedRange.Merge
-    mergedRange.Value = "Meal vouchers"
-    mergedRange.Font.Bold = True
-    mergedRange.Interior.Color = RGB(198, 239, 206)
-    mergedRange.Font.Color = RGB(0, 97, 0)
-    mergedRange.HorizontalAlignment = xlCenter
+    ' Middle-align and border all summary table header cells
+    With ws.Range(ws.Cells(6, tableCol), ws.Cells(7, tableCol + 11))
+        .VerticalAlignment = xlCenter
+        .HorizontalAlignment = xlCenter
+        .WrapText = True
+        .Borders.LineStyle = xlContinuous
+        .Borders.Weight = xlThin
+    End With
     
     ' Get value from C7
     multiplierValue = ws.Range("C7").Value
-    
-    ' Add borders to table headers
-    With ws.Cells(tableRow, tableCol).Borders
-        .LineStyle = xlContinuous
-        .Weight = xlThin
-    End With
-    With ws.Cells(tableRow, tableCol + 1).Borders
-        .LineStyle = xlContinuous
-        .Weight = xlThin
-    End With
-    With ws.Cells(tableRow, tableCol + 2).Borders
-        .LineStyle = xlContinuous
-        .Weight = xlThin
-    End With
-    With ws.Cells(tableRow, tableCol + 3).Borders
-        .LineStyle = xlContinuous
-        .Weight = xlThin
-    End With
-    With ws.Cells(tableRow, tableCol + 4).Borders
-        .LineStyle = xlContinuous
-        .Weight = xlThin
-    End With
-    With ws.Cells(tableRow, tableCol + 5).Borders
-        .LineStyle = xlContinuous
-        .Weight = xlThin
-    End With
-    With ws.Cells(tableRow, tableCol + 6).Borders
-        .LineStyle = xlContinuous
-        .Weight = xlThin
-    End With
-    With ws.Cells(tableRow, tableCol + 7).Borders
-        .LineStyle = xlContinuous
-        .Weight = xlThin
-    End With
-    With ws.Cells(tableRow, tableCol + 8).Borders
-        .LineStyle = xlContinuous
-        .Weight = xlThin
-    End With
-    With ws.Cells(tableRow, tableCol + 9).Borders
-        .LineStyle = xlContinuous
-        .Weight = xlThin
-    End With
     
     ' Fill table data
     tableRow = tableRow + 1
     For month = 1 To 12
         ws.Cells(tableRow, tableCol).Value = monthNames(month)
         ws.Cells(tableRow, tableCol + 1).Value = workingDaysByMonth(month)
-        ws.Cells(tableRow, tableCol + 2).Formula = "=$C$5*" & ws.Cells(tableRow, tableCol + 1).Address
-        ws.Cells(tableRow, tableCol + 2).NumberFormat = "#,##0.00 ""€"""
-        ws.Cells(tableRow, tableCol + 3).Formula = "=" & ws.Cells(tableRow, tableCol + 2).Address & "*($C$7+$C$8)+IF(" & ws.Cells(tableRow, tableCol + 4).Address & "<>0,$C$9,0)+$C$12"
+        
+        ' Input column, defaults to 0 when empty
+        If ws.Cells(tableRow, tableCol + 2).Value = "" Then ws.Cells(tableRow, tableCol + 2).Value = 0
+        ws.Cells(tableRow, tableCol + 2).NumberFormat = "0"
+        
+        ws.Cells(tableRow, tableCol + 3).Formula = "=$C$17*" & ws.Cells(tableRow, tableCol + 1).Address
         ws.Cells(tableRow, tableCol + 3).NumberFormat = "#,##0.00 ""€"""
+        ws.Cells(tableRow, tableCol + 3).Font.Color = RGB(250, 125, 0)
+        ws.Cells(tableRow, tableCol + 3).Interior.Color = RGB(242, 242, 242)
+        ws.Cells(tableRow, tableCol + 4).Formula = "=(" & ws.Cells(tableRow, tableCol + 1).Address & "-" & ws.Cells(tableRow, tableCol + 2).Address & ")*$C$17"
+        ws.Cells(tableRow, tableCol + 4).NumberFormat = "#,##0.00 ""€"""
+        ws.Cells(tableRow, tableCol + 5).Formula = "=$C$5*" & ws.Cells(tableRow, tableCol + 1).Address
+        ws.Cells(tableRow, tableCol + 5).NumberFormat = "#,##0.00 ""€"""
+        ws.Cells(tableRow, tableCol + 6).Formula = "=" & ws.Cells(tableRow, tableCol + 5).Address & "*($C$7+$C$8)+IF(" & ws.Cells(tableRow, tableCol + 7).Address & "<>0,$C$9,0)+$C$12/2+" & ws.Cells(tableRow, tableCol + 4).Address & "/2"
+        ws.Cells(tableRow, tableCol + 6).NumberFormat = "#,##0.00 ""€"""
         
         ' Keep existing MAY value if different from 1500, otherwise set to 1500
-        If ws.Cells(tableRow, tableCol + 4).Value <> "" And ws.Cells(tableRow, tableCol + 4).Value <> 1500 Then
-            ' Keep the existing value
-        Else
-            ws.Cells(tableRow, tableCol + 4).Value = 1500
+        If ws.Cells(tableRow, tableCol + 7).Value = "" Or ws.Cells(tableRow, tableCol + 7).Value = 1500 Then
+            ws.Cells(tableRow, tableCol + 7).Value = 1500
         End If
-        ws.Cells(tableRow, tableCol + 4).NumberFormat = "#,##0.00 ""€"""
-        ws.Cells(tableRow, tableCol + 5).Formula = "=" & ws.Cells(tableRow, tableCol + 2).Address & "-" & ws.Cells(tableRow, tableCol + 3).Address & "-" & ws.Cells(tableRow, tableCol + 4).Address
-        ws.Cells(tableRow, tableCol + 5).NumberFormat = "#,##0.00 ""€"""
-        If ws.Cells(tableRow, tableCol + 6).Value = "" Then
-            ws.Cells(tableRow, tableCol + 6).Value = 0
-        End If
-        ws.Cells(tableRow, tableCol + 6).NumberFormat = "#,##0.00 ""€"""
-        ws.Cells(tableRow, tableCol + 7).Formula = "=" & ws.Cells(tableRow, tableCol + 5).Address & "-" & ws.Cells(tableRow, tableCol + 6).Address & "-$C$16-$C$20-$C$22"
-        ws.Cells(tableRow, tableCol + 7).NumberFormat = "#,##0.00 ""€"";[Red]-#,##0.00 ""€"""
-        ws.Cells(tableRow, tableCol + 8).Formula = "=$C$16-$C$21-($C$17*" & ws.Cells(tableRow, tableCol + 1).Address & ")/2-$C$12/2"
+        ws.Cells(tableRow, tableCol + 7).NumberFormat = "#,##0.00 ""€"""
+        ws.Cells(tableRow, tableCol + 8).Formula = "=" & ws.Cells(tableRow, tableCol + 5).Address & "-" & ws.Cells(tableRow, tableCol + 6).Address & "-" & ws.Cells(tableRow, tableCol + 7).Address
         ws.Cells(tableRow, tableCol + 8).NumberFormat = "#,##0.00 ""€"""
-        ws.Cells(tableRow, tableCol + 8).Font.Color = RGB(250, 125, 0)
-        ws.Cells(tableRow, tableCol + 8).Interior.Color = RGB(242, 242, 242)
-        ws.Cells(tableRow, tableCol + 9).Formula = "=$C$17*" & ws.Cells(tableRow, tableCol + 1).Address
+        If ws.Cells(tableRow, tableCol + 9).Value = "" Then
+            ws.Cells(tableRow, tableCol + 9).Value = 0
+        End If
         ws.Cells(tableRow, tableCol + 9).NumberFormat = "#,##0.00 ""€"""
-        ws.Cells(tableRow, tableCol + 9).Font.Color = RGB(250, 125, 0)
-        ws.Cells(tableRow, tableCol + 9).Interior.Color = RGB(242, 242, 242)
+        ws.Cells(tableRow, tableCol + 10).Formula = "=" & ws.Cells(tableRow, tableCol + 8).Address & "-" & ws.Cells(tableRow, tableCol + 9).Address & "-$C$16-$C$20-$C$22"
+        ws.Cells(tableRow, tableCol + 10).NumberFormat = "#,##0.00 ""€"";[Red]-#,##0.00 ""€"""
+        ws.Cells(tableRow, tableCol + 11).Formula = "=$C$16-$C$21-" & ws.Cells(tableRow, tableCol + 4).Address & "/2-$C$12/2"
+        ws.Cells(tableRow, tableCol + 11).NumberFormat = "#,##0.00 ""€"""
+        ws.Cells(tableRow, tableCol + 11).Font.Color = RGB(250, 125, 0)
+        ws.Cells(tableRow, tableCol + 11).Interior.Color = RGB(242, 242, 242)
         
-        ' Add borders
-        With ws.Cells(tableRow, tableCol).Borders
-            .LineStyle = xlContinuous
-            .Weight = xlThin
-        End With
-        With ws.Cells(tableRow, tableCol + 1).Borders
-            .LineStyle = xlContinuous
-            .Weight = xlThin
-        End With
-        With ws.Cells(tableRow, tableCol + 2).Borders
-            .LineStyle = xlContinuous
-            .Weight = xlThin
-        End With
-        With ws.Cells(tableRow, tableCol + 3).Borders
-            .LineStyle = xlContinuous
-            .Weight = xlThin
-        End With
-        With ws.Cells(tableRow, tableCol + 4).Borders
-            .LineStyle = xlContinuous
-            .Weight = xlThin
-        End With
-        With ws.Cells(tableRow, tableCol + 5).Borders
-            .LineStyle = xlContinuous
-            .Weight = xlThin
-        End With
-        With ws.Cells(tableRow, tableCol + 6).Borders
-            .LineStyle = xlContinuous
-            .Weight = xlThin
-        End With
-        With ws.Cells(tableRow, tableCol + 7).Borders
-            .LineStyle = xlContinuous
-            .Weight = xlThin
-        End With
-        With ws.Cells(tableRow, tableCol + 8).Borders
-            .LineStyle = xlContinuous
-            .Weight = xlThin
-        End With
-        With ws.Cells(tableRow, tableCol + 9).Borders
-            .LineStyle = xlContinuous
-            .Weight = xlThin
-        End With
+        For k = 0 To 11
+            With ws.Cells(tableRow, tableCol + k).Borders
+                .LineStyle = xlContinuous
+                .Weight = xlThin
+            End With
+        Next k
         
         tableRow = tableRow + 1
     Next month
     
     ' Set column width for table
-    ws.Columns(tableCol).ColumnWidth = 10
-    ws.Columns(tableCol + 1).ColumnWidth = 10
-    ws.Columns(tableCol + 2).ColumnWidth = 10
-    ws.Columns(tableCol + 3).ColumnWidth = 12
-    ws.Columns(tableCol + 4).ColumnWidth = 10
-    ws.Columns(tableCol + 5).ColumnWidth = 14
-    ws.Columns(tableCol + 6).ColumnWidth = 15
-    ws.Columns(tableCol + 7).ColumnWidth = 12
-    ws.Columns(tableCol + 8).ColumnWidth = 12
-    ws.Columns(tableCol + 9).ColumnWidth = 12
-    
+    widths = Array(10, 10, 12, 12, 14, 10, 12, 10, 14, 15, 12, 12)
+    For k = 0 To 11
+        ws.Columns(tableCol + k).ColumnWidth = widths(k)
+    Next k
+
+    ' Salary reserve label in merged F21:F24
+    With ws.Range("F21:H21")
+        .Merge
+        .Value = "The salary reserve is :"
+        .WrapText = True
+        .HorizontalAlignment = xlLeft
+        .VerticalAlignment = xlCenter
+        .Interior.Color = RGB(0, 176, 80)
+        .Font.Color = RGB(255, 255, 255)
+        .Font.Size = 11
+        .Borders.LineStyle = xlContinuous
+        .Borders.Weight = xlThin
+        .Borders.Color = RGB(128, 128, 128)
+        .Font.Bold = True
+        .Borders(xlEdgeBottom).LineStyle = xlNone
+    End With
+
+    ' Treasury total (column P) placed in merged F22:H24; 2026 counts from May
+    Dim treasuryStartRow As Integer
+    treasuryStartRow = 8
+    If calYear = 2026 Then treasuryStartRow = 12
+    With ws.Range("F22:H24")
+        .Merge
+        .Formula = "=SUM(" & ws.Range(ws.Cells(treasuryStartRow, tableCol + 10), ws.Cells(19, tableCol + 10)).Address & ")"
+        .WrapText = True
+        .HorizontalAlignment = xlCenter
+        .VerticalAlignment = xlCenter
+        .Interior.Color = RGB(0, 176, 80)
+        .Font.Color = RGB(255, 255, 255)
+        .Font.Size = 32
+        .Borders.LineStyle = xlContinuous
+        .Borders.Weight = xlThin
+        .Borders.Color = RGB(128, 128, 128)
+        .Borders(xlEdgeTop).LineStyle = xlNone
+    End With
+
     MsgBox "The calendar for " & calYear & " has been created!", vbInformation
 End Sub
 
