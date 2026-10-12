@@ -163,6 +163,8 @@ Sub CreateCalendar()
                 isGreen = True
             End If
             
+            If Not ws.Cells(row, startCol + col).Comment Is Nothing Then ws.Cells(row, startCol + col).Comment.Delete
+            
             If Not isGreen Then
                 If isHoliday Then
                     ws.Cells(row, startCol + col).Interior.Color = RGB(255, 200, 0)  ' Orange for holidays
@@ -173,8 +175,6 @@ Sub CreateCalendar()
                     On Error Resume Next
                     ws.Cells(row, startCol + col).AddComment holidayName
                     On Error GoTo 0
-                ElseIf col = 5 Or col = 6 Then
-                    ws.Cells(row, startCol + col).Interior.Color = RGB(220, 220, 220)
                 End If
             End If
             
@@ -312,6 +312,7 @@ Sub CreateCalendar()
     Dim multiplierValue As Double
     Dim mergedRange As Range
     Dim headerTitles As Variant
+    Dim commentTexts As Variant
     Dim widths As Variant
     Dim h As Integer
     Dim k As Integer
@@ -319,13 +320,14 @@ Sub CreateCalendar()
     tableRow = 7   ' Starting row 8
     
     ' Merge cells F6:F7, G6:G7, etc. for headers
-    headerTitles = Array("Month", "Working days", "Professional launch day", "Calculated Meal vouchers", "Real Meal Voucher", "Revenue", "Monthly Load", "MAY", "Available Balance", "Professional expense", "Treasury", "Net Salary")
-    For h = 0 To 11
+    headerTitles = Array("Month", "Working days", "Professional launch day", "Calculated Meal vouchers", "Real Meal Voucher", "Revenue", "Monthly Load", "MAY", "Available Balance", "Professional expense", "Treasury", "Net Salary", "Income Tax Withholding", "Net to Pay")
+    commentTexts = Array("Calendar month of the row", "Working days from the calendar, excluding days off and holidays, plus green days", "Input: number of professional launch days in the month", "Working days x C17", "(Working days - Professional launch day) x C17", "Working days x C5", "Revenue x (C7+C8) + MAY (if not 0) + C12/2 + Real Meal Voucher/2", "Input: MAY amount, default 1500", "Revenue - Monthly Load - MAY", "Input: professional expenses for the month", "Available Balance - Professional expense - C16 - C20 - C22", "C16 - C21 - Real Meal Voucher/2 - C12/2", "Net Salary x C13", "Net Salary - Income Tax Withholding")
+    For h = 0 To 13
         Set mergedRange = ws.Range(ws.Cells(6, tableCol + h), ws.Cells(7, tableCol + h))
         mergedRange.Merge
         mergedRange.Value = headerTitles(h)
         mergedRange.Font.Bold = True
-        If h = 3 Or h = 11 Then
+        If h = 4 Or h = 13 Then
             mergedRange.Interior.Color = RGB(198, 239, 206)
             mergedRange.Font.Color = RGB(0, 97, 0)
         Else
@@ -333,10 +335,14 @@ Sub CreateCalendar()
             mergedRange.Font.Color = RGB(255, 255, 255)
         End If
         mergedRange.HorizontalAlignment = xlCenter
+        With ws.Cells(6, tableCol + h)
+            If Not .Comment Is Nothing Then .Comment.Delete
+            .AddComment commentTexts(h)
+        End With
     Next h
     
     ' Middle-align and border all summary table header cells
-    With ws.Range(ws.Cells(6, tableCol), ws.Cells(7, tableCol + 11))
+    With ws.Range(ws.Cells(6, tableCol), ws.Cells(7, tableCol + 13))
         .VerticalAlignment = xlCenter
         .HorizontalAlignment = xlCenter
         .WrapText = True
@@ -359,10 +365,10 @@ Sub CreateCalendar()
         
         ws.Cells(tableRow, tableCol + 3).Formula = "=$C$17*" & ws.Cells(tableRow, tableCol + 1).Address
         ws.Cells(tableRow, tableCol + 3).NumberFormat = "#,##0.00 ""€"""
-        ws.Cells(tableRow, tableCol + 3).Font.Color = RGB(250, 125, 0)
-        ws.Cells(tableRow, tableCol + 3).Interior.Color = RGB(242, 242, 242)
         ws.Cells(tableRow, tableCol + 4).Formula = "=(" & ws.Cells(tableRow, tableCol + 1).Address & "-" & ws.Cells(tableRow, tableCol + 2).Address & ")*$C$17"
         ws.Cells(tableRow, tableCol + 4).NumberFormat = "#,##0.00 ""€"""
+        ws.Cells(tableRow, tableCol + 4).Font.Color = RGB(250, 125, 0)
+        ws.Cells(tableRow, tableCol + 4).Interior.Color = RGB(242, 242, 242)
         ws.Cells(tableRow, tableCol + 5).Formula = "=$C$5*" & ws.Cells(tableRow, tableCol + 1).Address
         ws.Cells(tableRow, tableCol + 5).NumberFormat = "#,##0.00 ""€"""
         ws.Cells(tableRow, tableCol + 6).Formula = "=" & ws.Cells(tableRow, tableCol + 5).Address & "*($C$7+$C$8)+IF(" & ws.Cells(tableRow, tableCol + 7).Address & "<>0,$C$9,0)+$C$12/2+" & ws.Cells(tableRow, tableCol + 4).Address & "/2"
@@ -382,11 +388,15 @@ Sub CreateCalendar()
         ws.Cells(tableRow, tableCol + 10).Formula = "=" & ws.Cells(tableRow, tableCol + 8).Address & "-" & ws.Cells(tableRow, tableCol + 9).Address & "-$C$16-$C$20-$C$22"
         ws.Cells(tableRow, tableCol + 10).NumberFormat = "#,##0.00 ""€"";[Red]-#,##0.00 ""€"""
         ws.Cells(tableRow, tableCol + 11).Formula = "=$C$16-$C$21-" & ws.Cells(tableRow, tableCol + 4).Address & "/2-$C$12/2"
-        ws.Cells(tableRow, tableCol + 11).NumberFormat = "#,##0.00 ""€"""
-        ws.Cells(tableRow, tableCol + 11).Font.Color = RGB(250, 125, 0)
-        ws.Cells(tableRow, tableCol + 11).Interior.Color = RGB(242, 242, 242)
+        ws.Cells(tableRow, tableCol + 11).NumberFormat = "#,##0.00 ""€"";[Red]-#,##0.00 ""€"""
+        ws.Cells(tableRow, tableCol + 12).Formula = "=" & ws.Cells(tableRow, tableCol + 11).Address & "*$C$13"
+        ws.Cells(tableRow, tableCol + 12).NumberFormat = "#,##0.00 ""€"";[Red]-#,##0.00 ""€"""
+        ws.Cells(tableRow, tableCol + 13).Formula = "=" & ws.Cells(tableRow, tableCol + 11).Address & "-" & ws.Cells(tableRow, tableCol + 12).Address
+        ws.Cells(tableRow, tableCol + 13).NumberFormat = "#,##0.00 ""€"""
+        ws.Cells(tableRow, tableCol + 13).Font.Color = RGB(250, 125, 0)
+        ws.Cells(tableRow, tableCol + 13).Interior.Color = RGB(242, 242, 242)
         
-        For k = 0 To 11
+        For k = 0 To 13
             With ws.Cells(tableRow, tableCol + k).Borders
                 .LineStyle = xlContinuous
                 .Weight = xlThin
@@ -397,8 +407,8 @@ Sub CreateCalendar()
     Next month
     
     ' Set column width for table
-    widths = Array(10, 10, 12, 12, 14, 10, 12, 10, 14, 15, 12, 12)
-    For k = 0 To 11
+    widths = Array(10, 10, 12, 12, 14, 10, 12, 10, 14, 15, 12, 12, 14, 12)
+    For k = 0 To 13
         ws.Columns(tableCol + k).ColumnWidth = widths(k)
     Next k
 
